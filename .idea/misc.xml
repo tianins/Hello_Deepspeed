@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Black">
+    <option name="sdkName" value="Remote Python 3.8.8 (sftp://ailab@dhailab.asuscomm.com:2048/home/ailab/miniconda3/envs/esr/bin/python3.8)" />
+  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Remote Python 3.8.18 (sftp://ailab@dhailab.asuscomm.com:2048/home/ailab/miniconda3/envs/ds_pt_2.0.1_py3.8_t/bin/python3.8)" project-jdk-type="Python SDK" />
+</project>
