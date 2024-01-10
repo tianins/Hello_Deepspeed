@@ -1,0 +1,28 @@
+2024-01-03 14:22:06,799 [INFO] - bs个数：399
+2024-01-03 14:22:08,671 [INFO] - {'bert_model': 'bert-base-chinese', 'use_classification_model': True, 'max_seq_length': 128, 'do_lower_case': True, 'no_cuda': False, 'local_rank': 1, 'gradient_accumulation_steps': 1, 'fp16': True, 'loss_scale': 0, 'model_file': 0, 'random': False, 'focal': False, 'gamma': 0.5, 'deepspeed_transformer_kernel': False, 'progressive_layer_drop': False, 'preln': False, 'log_file': 'log_file', 'class_num': 2, 'model_path': 'output', 'train_data_path': '../data/Sentiment_classification_data_processing/new_train_data.json', 'valid_data_path': '../data/Sentiment_classification_data_processing/test_data.json', 'vocab_path': 'chars.txt', 'model_type': 'ds_bert', 'max_length': 20, 'hidden_size': 128, 'kernel_size': 3, 'num_layers': 2, 'epoch': 2, 'batch_size': 16, 'pooling_style': 'max', 'optimizer': 'adam', 'learning_rate': 1e-05, 'pretrain_model_path': 'E:\\data\\hub\\bert_base_chinese', 'seed': 987, 'vocab_size': 4622}
+2024-01-03 14:22:08,671 [INFO] - gpu可以使用，迁移模型至gpu
+2024-01-03 14:22:09,204 [INFO] - epoch 1 begin
+2024-01-03 14:22:09,675 [INFO] - batch loss 0.708594
+2024-01-03 14:22:19,859 [INFO] - batch loss 0.587018
+2024-01-03 14:22:30,050 [INFO] - batch loss 0.361906
+2024-01-03 14:22:30,051 [INFO] - epoch average loss: 0.525219
+2024-01-03 14:22:30,051 [INFO] - 开始测试第1轮模型效果：
+2024-01-03 14:22:31,460 [INFO] - 预测集合条目总量：2400
+2024-01-03 14:22:31,460 [INFO] - 预测正确条目：1851，预测错误条目：549
+2024-01-03 14:22:31,460 [INFO] - 预测准确率：0.771250
+2024-01-03 14:22:31,462 [INFO] - confusion_matrix[target --> pred]: {'1 --> 1': 694, '0 --> 0': 1157, '0 --> 1': 431, '1 --> 0': 118}
+2024-01-03 14:22:31,468 [INFO] - avg_P: 0.7622, avg_R: 0.7916, avg_F：0.7624
+2024-01-03 14:22:31,468 [INFO] - --------------------
+2024-01-03 14:22:31,468 [INFO] - epoch 2 begin
+2024-01-03 14:22:31,518 [INFO] - batch loss 0.409695
+2024-01-03 14:22:41,511 [INFO] - batch loss 0.617183
+2024-01-03 14:22:51,705 [INFO] - batch loss 0.322812
+2024-01-03 14:22:51,705 [INFO] - epoch average loss: 0.382799
+2024-01-03 14:22:51,705 [INFO] - 开始测试第2轮模型效果：
+2024-01-03 14:22:52,900 [INFO] - 预测集合条目总量：2400
+2024-01-03 14:22:52,900 [INFO] - 预测正确条目：2045，预测错误条目：355
+2024-01-03 14:22:52,900 [INFO] - 预测准确率：0.852083
+2024-01-03 14:22:52,902 [INFO] - confusion_matrix[target --> pred]: {'1 --> 0': 169, '1 --> 1': 643, '0 --> 0': 1402, '0 --> 1': 186}
+2024-01-03 14:22:52,907 [INFO] - avg_P: 0.834, avg_R: 0.8374, avg_F：0.8356
+2024-01-03 14:22:52,907 [INFO] - --------------------
+2024-01-03 14:22:52,907 [INFO] - 平均训练每轮时间: 0 minutes, 21 seconds, 851 milliseconds

@@ -2,6 +2,7 @@
 import torch
 from loader_1226 import load_data
 from sklearn.metrics import precision_recall_fscore_support
+import torch.distributed as dist
 """
 模型效果测试
 1226
@@ -24,7 +25,11 @@ class Evaluator:
         self.all_pred_labels = []
 
     def eval(self, epoch):
-        self.logger.info("开始测试第%d轮模型效果：" % epoch)
+        if self.config['deepspeed']:
+            if dist.get_rank() == 0:
+                self.logger.info("开始测试第%d轮模型效果：" % epoch)
+        else:
+            self.logger.info("开始测试第%d轮模型效果：" % epoch)
         self.model.eval()
         # 清空上一轮结果
         self.stats_dict = {"correct": 0, "wrong": 0}
@@ -60,10 +65,15 @@ class Evaluator:
     def show_stats(self):
         correct = self.stats_dict["correct"]
         wrong = self.stats_dict["wrong"]
-        self.logger.info("预测集合条目总量：%d" % (correct +wrong))
-        self.logger.info("预测正确条目：%d，预测错误条目：%d" % (correct, wrong))
-        self.logger.info("预测准确率：%f" % (correct / (correct + wrong)))
-
+        if self.config['deepspeed']:
+            if dist.get_rank() == 0:
+                self.logger.info("预测集合条目总量：%d" % (correct +wrong))
+                self.logger.info("预测正确条目：%d，预测错误条目：%d" % (correct, wrong))
+                self.logger.info("预测准确率：%f" % (correct / (correct + wrong)))
+        else:
+            self.logger.info("预测集合条目总量：%d" % (correct + wrong))
+            self.logger.info("预测正确条目：%d，预测错误条目：%d" % (correct, wrong))
+            self.logger.info("预测准确率：%f" % (correct / (correct + wrong)))
         confusion_matrix = {}
         matches = 0
         if len(self.all_pred_labels) != 0:
@@ -77,10 +87,19 @@ class Evaluator:
                     confusion_matrix[string] = 1
             acc = float(matches) / float(len(self.all_label))
             # print("accuracy:", acc)
-            self.logger.info("confusion_matrix[target --> pred]: %s", confusion_matrix)
+            if self.config['deepspeed']:
+                if dist.get_rank() == 0:
+                    self.logger.info("confusion_matrix[target --> pred]: %s", confusion_matrix)
+            else:
+                self.logger.info("confusion_matrix[target --> pred]: %s", confusion_matrix)
         avg = precision_recall_fscore_support(
             self.all_label, self.all_pred_labels, average='macro')
         avg_P, avg_R, avg_F = avg[0], avg[1], avg[2]
-        self.logger.info("avg_P: {}, avg_R: {}, avg_F：{}".format(round(avg_P, 4), round(avg_R, 4), round(avg_F, 4)))
-        self.logger.info("--------------------")
+        if self.config['deepspeed']:
+            if dist.get_rank() == 0:
+                self.logger.info("avg_P: {}, avg_R: {}, avg_F：{}".format(round(avg_P, 4), round(avg_R, 4), round(avg_F, 4)))
+                self.logger.info("--------------------")
+        else:
+            self.logger.info("avg_P: {}, avg_R: {}, avg_F：{}".format(round(avg_P, 4), round(avg_R, 4), round(avg_F, 4)))
+            self.logger.info("--------------------")
         return correct / (correct + wrong)

@@ -7,11 +7,10 @@ import transformers
 from config import Config
 from BingBertGlue.pytorch_pretrained_bert.tokenization import BertTokenizer
 from utils import dict_to_config_class
-
+from transformers.models.roberta import RobertaConfig, RobertaModel
 """
 建立网络模型结构
 """
-
 
 class TorchModel(nn.Module):
     def __init__(self, config):

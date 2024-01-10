@@ -299,7 +299,12 @@ https://blog.csdn.net/weixin_38252409/article/details/134992123
 
 ```
 教程里没有直接使用官方的bert进行预训练的，他们使用的是英伟达发布的剪枝过的bert，这个版本的bert的优点在于有别人写好的deepspeed的配置，可以直接调用；如果不用的话就得自己写
+——————————————————————————————
+# 240109
+其实不是这样的，直接实用官方的模型也能跑，只需要将模型用ds进行初始化，再修改一下，优化器和梯度更新的方法就行，
 
+后面的Glue教程环境装起来很复杂，不好弄，最后还没跑起来
+——————————————————————————————
 但是缺点是还要安装tf，tf能不能装上还是个问题
 安装tf 成功
 https://tensorflow.google.cn/install/pip?hl=zh-cn#ubuntu-macos
@@ -350,5 +355,99 @@ pip install torch==2.1.1 torchvision==0.16.1 torchaudio==2.1.1 --index-url https
 1.ds保存的模型格式和之前的方式不同，也没有调用过保存的模型
 2.没有详细的对比使用ds和单卡运行的时间效率和微调模型的性能
 3.训练模型打印的信息会重复，没有完全按照ds训练流程，这里需要重新修改代码
+```
+
+
+
+
+
+```
+240109
+ds_pt_2.0.1_py3.8_t
+修改日志的打印方式，使用ds自带的日志可以避免打印多份
+
+增加ds的模型载入方法
+
+240110
+但是这个保存的模型的效果好像不如训练时的好，不知道为什么？
+
+训练的测试效果
+
+2024-01-10 13:22:07,743 [INFO] - epoch average loss: 0.256428
+2024-01-10 13:22:07,743 [INFO] - 开始测试第2轮模型效果：
+2024-01-10 13:22:09,087 [INFO] - 预测集合条目总量：2400
+2024-01-10 13:22:09,087 [INFO] - 预测正确条目：2111，预测错误条目：289
+2024-01-10 13:22:09,088 [INFO] - 预测准确率：0.879583
+2024-01-10 13:22:09,089 [INFO] - confusion_matrix[target --> pred]: {'1 --> 1': 685, '0 --> 0': 1426, '0 --> 1': 162, '1 --> 0': 127}
+2024-01-10 13:22:09,094 [INFO] - avg_P: 0.8635, avg_R: 0.8708, avg_F：0.8669
+2024-01-10 13:22:09,094 [INFO] - --------------------
+2024-01-10 13:22:09,095 [INFO] - 平均训练每轮时间: 1 minutes, 21 seconds, 318 milliseconds
+
+读取保存模型的测试效果
+
+2024-01-10 13:25:46,680 [INFO] - 预测集合条目总量：2400
+2024-01-10 13:25:46,680 [INFO] - 预测正确条目：1588，预测错误条目：812
+2024-01-10 13:25:46,680 [INFO] - 预测准确率：0.661667
+2024-01-10 13:25:46,681 [INFO] - confusion_matrix[target --> pred]: {'1 --> 0': 812, '0 --> 0': 1588}
+/home/ailab/miniconda3/envs/ds_pt_2.0.1_py3.8_t/lib/python3.8/site-packages/sklearn/metrics/_classification.py:1471: UndefinedMetricWarning: Precision and F-score are ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, msg_start, len(result))
+2024-01-10 13:25:46,688 [INFO] - avg_P: 0.3308, avg_R: 0.5, avg_F：0.3982
+2024-01-10 13:25:46,688 [INFO] - --------------------
+2024-01-10 13:25:46,688 [INFO] - 轮次: 2 ,acc: 0.6616666666666666
+
+不理解这是为什么？不管是保存第几轮的模型，使用ds进行模型载入的结果都是一样的：0.661667，但是将ds的模型转化为.bin的格式再使用python进行读取的测试效果差不多，感觉是ds的模型载入没有处理好
+
+ds训练时的测试结果
+2024-01-10 13:38:42,826 [INFO] - epoch average loss: 0.137039
+2024-01-10 13:38:42,826 [INFO] - 开始测试第5轮模型效果：
+2024-01-10 13:38:44,061 [INFO] - 预测集合条目总量：2400
+2024-01-10 13:38:44,061 [INFO] - 预测正确条目：2058，预测错误条目：342
+2024-01-10 13:38:44,061 [INFO] - 预测准确率：0.857500
+2024-01-10 13:38:44,063 [INFO] - confusion_matrix[target --> pred]: {'1 --> 1': 702, '0 --> 1': 232, '0 --> 0': 1356, '1 --> 0': 110}
+
+
+ds读取保存后的结果
+2024-01-10 13:40:16,537 [INFO] - 开始测试第5轮模型效果：
+/home/ailab/miniconda3/envs/ds_pt_2.0.1_py3.8_t/lib/python3.8/site-packages/sklearn/metrics/_classification.py:1471: UndefinedMetricWarning: Precision and F-score are ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, msg_start, len(result))
+/home/ailab/miniconda3/envs/ds_pt_2.0.1_py3.8_t/lib/python3.8/site-packages/sklearn/metrics/_classification.py:1471: UndefinedMetricWarning: Precision and F-score are ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, msg_start, len(result))
+2024-01-10 13:40:17,864 [INFO] - 预测集合条目总量：2400
+2024-01-10 13:40:17,864 [INFO] - 预测正确条目：1588，预测错误条目：812
+2024-01-10 13:40:17,865 [INFO] - 预测准确率：0.661667
+2024-01-10 13:40:17,866 [INFO] - confusion_matrix[target --> pred]: {'1 --> 0': 812, '0 --> 0': 1588}
+/home/ailab/miniconda3/envs/ds_pt_2.0.1_py3.8_t/lib/python3.8/site-packages/sklearn/metrics/_classification.py:1471: UndefinedMetricWarning: Precision and F-score are ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, msg_start, len(result))
+2024-01-10 13:40:17,872 [INFO] - avg_P: 0.3308, avg_R: 0.5, avg_F：0.3982
+2024-01-10 13:40:17,872 [INFO] - --------------------
+2024-01-10 13:40:17,872 [INFO] - 轮次: 5 ,acc: 0.6616666666666666
+
+将保存的ds格式转换为.bin格式后的读取的结果
+2024-01-10 14:01:19,766 [INFO] - 开始测试第5轮模型效果：
+2024-01-10 14:01:20,731 [INFO] - 预测集合条目总量：2400
+2024-01-10 14:01:20,731 [INFO] - 预测正确条目：2052，预测错误条目：348
+2024-01-10 14:01:20,731 [INFO] - 预测准确率：0.855000
+2024-01-10 14:01:20,733 [INFO] - confusion_matrix[target --> pred]: {'1 --> 1': 702, '0 --> 1': 238, '0 --> 0': 1350, '1 --> 0': 110}
+2024-01-10 14:01:20,738 [INFO] - avg_P: 0.8357, avg_R: 0.8573, avg_F：0.8436
+2024-01-10 14:01:20,738 [INFO] - --------------------
+2024-01-10 14:01:20,738 [INFO] - 轮次: 5 ,acc: 0.855
+
+找到原因了，是ds读取路径的问题，ds的读取路径是/data1/hqp_w/Hello_Deepspeed/output/epoch_2/，整个文件夹，而不是/data1/hqp_w/Hello_Deepspeed/output/epoch_2/global_step400/它里面的子文件夹
+
+2024-01-10 14:19:58,430 [INFO] - 开始测试第5轮模型效果：
+2024-01-10 14:19:59,711 [INFO] - 预测集合条目总量：2400
+2024-01-10 14:19:59,711 [INFO] - 预测正确条目：2058，预测错误条目：342
+2024-01-10 14:19:59,711 [INFO] - 预测准确率：0.857500
+2024-01-10 14:19:59,713 [INFO] - confusion_matrix[target --> pred]: {'1 --> 1': 702, '0 --> 1': 232, '0 --> 0': 1356, '1 --> 0': 110}
+2024-01-10 14:19:59,719 [INFO] - avg_P: 0.8383, avg_R: 0.8592, avg_F：0.8461
+2024-01-10 14:19:59,719 [INFO] - --------------------
+2024-01-10 14:19:59,719 [INFO] - 轮次: 5 ,acc: 0.8575
+
+```
+
+
+
+```
+解决了模型读取和保存的问题，后面再对比一下使用不同配置文件的区别
 ```
 

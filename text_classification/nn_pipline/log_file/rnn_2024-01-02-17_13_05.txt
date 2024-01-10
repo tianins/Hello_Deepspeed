@@ -1,0 +1,30 @@
+2024-01-02 17:13:05,208 [INFO] - bs个数：399
+2024-01-02 17:13:05,255 [INFO] - {'log_file': 'log_file', 'class_num': 2, 'model_path': 'output', 'train_data_path': '../data/Sentiment_classification_data_processing/new_train_data.json', 'valid_data_path': '../data/Sentiment_classification_data_processing/test_data.json', 'vocab_path': 'chars.txt', 'model_type': 'rnn', 'max_length': 20, 'hidden_size': 128, 'kernel_size': 3, 'num_layers': 2, 'epoch': 5, 'batch_size': 16, 'pooling_style': 'max', 'optimizer': 'adam', 'learning_rate': 1e-05, 'pretrain_model_path': 'E:\\data\\hub\\bert_base_chinese', 'seed': 987, 'vocab_size': 4622}
+2024-01-02 17:13:05,256 [INFO] - gpu可以使用，迁移模型至gpu
+2024-01-02 17:13:06,093 [INFO] - epoch 1 begin
+2024-01-02 17:13:06,213 [INFO] - batch loss 0.676806
+2024-01-02 17:13:06,966 [INFO] - batch loss 0.705902
+2024-01-02 17:13:07,779 [INFO] - batch loss 0.694756
+2024-01-02 17:13:07,780 [INFO] - epoch average loss: 0.692733
+2024-01-02 17:13:07,780 [INFO] - 开始测试第1轮模型效果：
+2024-01-02 17:13:07,989 [INFO] - 预测集合条目总量：2400
+2024-01-02 17:13:07,989 [INFO] - 预测正确条目：1573，预测错误条目：827
+2024-01-02 17:13:07,989 [INFO] - 预测准确率：0.655417
+2024-01-02 17:13:07,991 [INFO] - confusion_matrix[target --> pred]: {'1 --> 0': 555, '0 --> 0': 1316, '0 --> 1': 272, '1 --> 1': 257}
+2024-01-02 17:13:07,997 [INFO] - avg_P: 0.5946, avg_R: 0.5726, avg_F：0.5721
+2024-01-02 17:13:07,997 [INFO] - --------------------
+2024-01-02 17:13:07,997 [INFO] - epoch 2 begin
+2024-01-02 17:13:08,000 [INFO] - batch loss 0.667640
+2024-01-02 17:13:08,786 [INFO] - batch loss 0.681173
+2024-01-02 17:13:09,588 [INFO] - batch loss 0.675828
+2024-01-02 17:13:09,588 [INFO] - epoch average loss: 0.673346
+2024-01-02 17:13:09,589 [INFO] - 开始测试第2轮模型效果：
+2024-01-02 17:13:09,795 [INFO] - 预测集合条目总量：2400
+2024-01-02 17:13:09,795 [INFO] - 预测正确条目：1659，预测错误条目：741
+2024-01-02 17:13:09,795 [INFO] - 预测准确率：0.691250
+2024-01-02 17:13:09,797 [INFO] - confusion_matrix[target --> pred]: {'1 --> 0': 348, '1 --> 1': 464, '0 --> 0': 1195, '0 --> 1': 393}
+2024-01-02 17:13:09,802 [INFO] - avg_P: 0.6579, avg_R: 0.662, avg_F：0.6597
+2024-01-02 17:13:09,802 [INFO] - --------------------
+2024-01-02 17:13:09,802 [INFO] - epoch 3 begin
+2024-01-02 17:13:09,805 [INFO] - batch loss 0.669813
+2024-01-02 17:13:10,559 [INFO] - batch loss 0.641012

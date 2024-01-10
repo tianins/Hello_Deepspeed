@@ -14,6 +14,7 @@ from loader_1226 import load_data
 import time
 import os
 import deepspeed
+import torch.distributed as dist
 
 from utils import dict_to_config_class
 time_str = time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime())
@@ -100,55 +101,85 @@ def main(config):
             model = model.cuda()
         # 加载优化器
         optimizer = choose_optimizer(config, model)
+
+    if config['test']:
+        if config['deepspeed']:
+            model.load_checkpoint(load_dir=config['load_checkpoint_dir'])
+        else:
+            checkpoint = torch.load(config['load_checkpoint_dir'])
+            model.load_state_dict(checkpoint)
         # 加载效果测试类
-    evaluator = Evaluator(config, model, logger)
-    # 训练
-    start_time = time.time()
-    for epoch in range(config["epoch"]):
-        epoch += 1
-        model.train()
-        logger.info("epoch %d begin" % epoch)
-        train_loss = []
-        for index, batch_data in enumerate(train_data):
-            if cuda_flag:
-                batch_data = [d.cuda() for d in batch_data]
-            if Config['deepspeed']:
-                input_ids, labels = batch_data  # 输入变化时这里需要修改，比如多输入，多输出的情况
-                loss = model(input_ids, labels)
-                # Backward pass
-                model.backward(loss)
-                # Optimizer Step
-                model.step()
-            else:
-                optimizer.zero_grad()
-                input_ids, labels = batch_data  # 输入变化时这里需要修改，比如多输入，多输出的情况
-                loss = model(input_ids, labels)
-                loss.backward()
-                optimizer.step()
-
-            train_loss.append(loss.item())
-            if index % int(len(train_data) / 2) == 0:
-                logger.info("batch loss %f" % loss)
-        logger.info("epoch average loss: %f" % np.mean(train_loss))
+        evaluator = Evaluator(config, model, logger)
+        epoch = int(config['load_checkpoint_dir'].split('/')[5].split('_')[1])
         acc = evaluator.eval(epoch)
-    end_time = time.time()
-    # 计算运行时间（以秒为单位）
-    elapsed_time_seconds = end_time - start_time
-    elapsed_time_seconds_per_e = elapsed_time_seconds/config["epoch"]
-    # 转换为分钟、秒、毫秒
-    elapsed_minutes = int(elapsed_time_seconds_per_e // 60)
-    elapsed_seconds = int(elapsed_time_seconds_per_e % 60)
-    elapsed_milliseconds = int((elapsed_time_seconds_per_e - int(elapsed_time_seconds_per_e)) * 1000)
+        if config['deepspeed']:
+            if dist.get_rank() == 0:
+                 logger.info(f"轮次: {epoch} ,acc: {acc}")
+        else:
+            logger.info(f"轮次: {epoch} ,acc: {acc}")
+    else:
+        # 加载效果测试类
+        evaluator = Evaluator(config, model, logger)
+        # 训练
+        start_time = time.time()
+        for epoch in range(config["epoch"]):
+            epoch += 1
+            model.train()
+            logger.info("epoch %d begin" % epoch)
+            train_loss = []
+            for index, batch_data in enumerate(train_data):
+                if cuda_flag:
+                    batch_data = [d.cuda() for d in batch_data]
+                if Config['deepspeed']:
+                    input_ids, labels = batch_data  # 输入变化时这里需要修改，比如多输入，多输出的情况
+                    loss = model(input_ids, labels)
+                    # Backward pass
+                    model.backward(loss)
+                    # Optimizer Step
+                    model.step()
+                else:
+                    optimizer.zero_grad()
+                    input_ids, labels = batch_data  # 输入变化时这里需要修改，比如多输入，多输出的情况
+                    loss = model(input_ids, labels)
+                    loss.backward()
+                    optimizer.step()
 
-    logger.info(f"平均训练每轮时间: {elapsed_minutes} minutes, {elapsed_seconds} seconds, {elapsed_milliseconds} milliseconds")
-    if not os.path.exists(config['model_path']):
-        os.mkdir(config['model_path'])
-    model_path = os.path.join(config["model_path"], "epoch_%d.pth" % epoch)
-    # if Config['deepspeed']:
-    #     model.save_checkpoint(save_dir=model_path)
-    # else:
-    #     torch.save(model.state_dict(), model_path)  #保存模型权重
-    return acc
+                train_loss.append(loss.item())
+                if index % int(len(train_data) / 2) == 0:
+                    if Config['deepspeed']:
+                        if dist.get_rank() == 0:
+                            print("epoch average loss: %f" % np.mean(train_loss))
+                    else:
+                        logger.info("batch loss %f" % loss)
+            if Config['deepspeed']:
+                if dist.get_rank() == 0:
+                    logger.info("epoch average loss: %f" % np.mean(train_loss))
+            else:
+                logger.info("epoch average loss: %f" % np.mean(train_loss))
+            acc = evaluator.eval(epoch)
+        end_time = time.time()
+        # 计算运行时间（以秒为单位）
+        elapsed_time_seconds = end_time - start_time
+        elapsed_time_seconds_per_e = elapsed_time_seconds/config["epoch"]
+        # 转换为分钟、秒、毫秒
+        elapsed_minutes = int(elapsed_time_seconds_per_e // 60)
+        elapsed_seconds = int(elapsed_time_seconds_per_e % 60)
+        elapsed_milliseconds = int((elapsed_time_seconds_per_e - int(elapsed_time_seconds_per_e)) * 1000)
+        if Config['deepspeed']:
+            if dist.get_rank() == 0:
+                logger.info(f"平均训练每轮时间: {elapsed_minutes} minutes, {elapsed_seconds} seconds, {elapsed_milliseconds} milliseconds")
+        else:
+            logger.info(
+                f"平均训练每轮时间: {elapsed_minutes} minutes, {elapsed_seconds} seconds, {elapsed_milliseconds} milliseconds")
+        if not os.path.exists(config['model_path']):
+            os.mkdir(config['model_path'])
+        model_path = os.path.join(config["model_path"], "epoch_%d" % epoch)
+        if Config['save_model']:
+            if Config['deepspeed']:
+                model.save_checkpoint(save_dir=model_path)
+            else:
+                torch.save(model.state_dict(), model_path+".pt")  #只保存模型权重
+        return acc
 
 
 if __name__ == "__main__":
